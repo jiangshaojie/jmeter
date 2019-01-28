@@ -381,7 +381,15 @@ options when <code>-jar</code> is used.</p>
 <p>A popup appears, you can then choose a template among the list:
 <figure image="template_wizard.png">Templates popup</figure>
 </p>
+<p>Some templates may need parameters input from the user. For theses ones, after a click on the create button,
+a new window will appear as follow :
+<figure image="templates/template_parameters.png">Parameters window</figure>
+</p>
+<p>
+When you are done with parameters, click on the <code>Validate</code> button and the template will be created.
+</p>
 <p>A documentation for each template explains what to do once test plan is created from template.</p>
+<note>You can create your own templates following documentation <a href="../creating-templates.html" >here</a></note>
 </subsection>
 
 <subsection name="&sect-num;.4.3 Using JMeter behind a proxy" anchor="proxy_server">
@@ -389,6 +397,7 @@ options when <code>-jar</code> is used.</p>
 the firewall/proxy server hostname and port number.  To do so, run the <code>jmeter[.bat]</code> file
 from a command line with the following parameters:</p>
 <dl>
+<dt><code>-E</code></dt><dd>[proxy scheme to use - optional - for non-http]</dd>
 <dt><code>-H</code></dt><dd>[proxy server hostname or ip address]</dd>
 <dt><code>-P</code></dt><dd>[proxy server port]</dd>
 <dt><code>-N</code></dt><dd>[nonproxy hosts] (e.g. <code>*.apache.org|localhost</code>)</dd>
@@ -396,11 +405,17 @@ from a command line with the following parameters:</p>
 <dt><code>-a</code></dt><dd>[password for proxy authentication - if required]</dd>
 </dl>
 <b>Example</b>:
-<source>jmeter -H my.proxy.server -P 8000 -u username -a password -N localhost</source>
-<p>You can also use <code>--proxyHost</code>, <code>--proxyPort</code>, <code>--username</code>, and <code>--password</code> as parameter names</p>
+<source>jmeter -E https -H my.proxy.server -P 8000 -u username -a password -N localhost</source>
+<p>You can also use <code>--proxyScheme</code>, <code>--proxyHost</code>, <code>--proxyPort</code>, <code>--username</code>, and <code>--password</code> as parameter names</p>
 <note>
 Parameters provided on a command-line may be visible to other users on the system.
 </note>
+<p>
+If the proxy scheme is provided, then JMeter sets the following System properties:
+</p>
+<ul>
+<li><code>http.proxyScheme</code></li>
+</ul>
 <p>
 If the proxy host and port are provided, then JMeter sets the following System properties:
 </p>

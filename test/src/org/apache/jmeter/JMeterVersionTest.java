@@ -46,6 +46,7 @@ import org.junit.Test;
 
 /**
  * Check the eclipse and Maven version definitions against build.properties
+ * Drop this if we move to Maven the build process
  */
 public class JMeterVersionTest extends JMeterTestCase {
 
@@ -163,7 +164,7 @@ public class JMeterVersionTest extends JMeterTestCase {
                     version = "1.0-groovy-2.4";
                 } else if (jar.equals("Saxon-HE-9.8.0")) { // special handling
                     jar = "Saxon-HE";
-                    version = "9.8.0-12";
+                    version = "9.8.0-14";
                 }else {
                     String tmp = JAR_TO_BUILD_PROP.get(jar);
                     if (tmp != null) {

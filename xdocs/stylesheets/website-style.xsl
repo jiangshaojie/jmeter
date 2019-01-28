@@ -30,7 +30,7 @@
   <xsl:param name="sshotdir" select="concat($imgdir, '/screenshots')" />
   <xsl:param name="cssdir" select="concat($relative-path, '/css')" />
   <xsl:param name="jakarta-site" select="'https://jakarta.apache.org'" />
-  <xsl:param name="year" select="'2018'" />
+  <xsl:param name="year" select="'2019'" />
   <xsl:param name="max-img-width" select="'600'" />
 
   <!-- Output method -->
@@ -550,7 +550,7 @@
     </a>,
   </xsl:template>
 
-  <xsl:template match="pr[not(following-sibling::pr) and (not(preceding-sibling::*) or preceding-sibling::bug)]">
+  <xsl:template match="pr[not(following-sibling::pr) and (not(preceding-sibling::*) or preceding-sibling::bug or preceding-sibling::pr)]">
     <a href="https://github.com/apache/jmeter/pull/{./text()}">
       Pull request #<xsl:value-of select="./text()" />
     </a>

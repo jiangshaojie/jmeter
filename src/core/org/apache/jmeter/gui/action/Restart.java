@@ -43,10 +43,9 @@ import org.slf4j.LoggerFactory;
  * Based on https://dzone.com/articles/programmatically-restart-java
  * @since 5.0
  */
-public class Restart extends AbstractAction implements MenuCreator {
+public class Restart extends AbstractActionWithNoRunningTest implements MenuCreator {
     private static final Logger log = LoggerFactory.getLogger(Restart.class);
 
-    private static final String RESTART = "restart";
     /** 
      * Sun property pointing the main class and its arguments. 
      * Might not be defined on non Hotspot VM implementations.
@@ -56,16 +55,34 @@ public class Restart extends AbstractAction implements MenuCreator {
     private static final Set<String> commands = new HashSet<>();
 
     static {
-        commands.add(RESTART);
+        commands.add(ActionNames.RESTART);
     }
 
     /**
      * @see Command#doAction(ActionEvent)
      */
     @Override
-    public void doAction(ActionEvent e) {
+    public void doActionAfterCheck(ActionEvent e) {
         try {
-            restartApplication(null);
+            GuiPackage guiPackage = GuiPackage.getInstance();
+            ActionRouter.getInstance().doActionNow(new ActionEvent(e.getSource(), e.getID(), ActionNames.CHECK_DIRTY));
+            if (guiPackage.isDirty()) {
+                int chosenOption = 
+                        JOptionPane.showConfirmDialog(guiPackage.getMainFrame(), JMeterUtils
+                                .getResString("cancel_exit_to_save"), // $NON-NLS-1$
+                                JMeterUtils.getResString("save?"), // $NON-NLS-1$
+                                JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE);
+                if (chosenOption == JOptionPane.NO_OPTION) {
+                    restartApplication(null);
+                } else if (chosenOption == JOptionPane.YES_OPTION) {
+                    ActionRouter.getInstance().doActionNow(new ActionEvent(e.getSource(), e.getID(), ActionNames.SAVE));
+                    if (!guiPackage.isDirty()) {
+                        restartApplication(null);
+                    }
+                }
+            } else {
+                restartApplication(null);
+            }
         } catch (Exception ex) {
             log.error("Error trying to restart: {}", ex.getMessage(), ex);
             JOptionPane.showMessageDialog(GuiPackage.getInstance().getMainFrame(), 
@@ -138,7 +155,7 @@ public class Restart extends AbstractAction implements MenuCreator {
             runBeforeRestart.run();
         }
         // exit
-        System.exit(0);
+        System.exit(0); // NOSONAR Required
 
     }
 
@@ -155,9 +172,9 @@ public class Restart extends AbstractAction implements MenuCreator {
         if(location == MENU_LOCATION.FILE) {
             
             JMenuItem menuItemIC = new JMenuItem(
-                    JMeterUtils.getResString(RESTART), KeyEvent.VK_UNDEFINED);
-            menuItemIC.setName(RESTART);
-            menuItemIC.setActionCommand(RESTART);
+                    JMeterUtils.getResString(ActionNames.RESTART), KeyEvent.VK_UNDEFINED);
+            menuItemIC.setName(ActionNames.RESTART);
+            menuItemIC.setActionCommand(ActionNames.RESTART);
             menuItemIC.setAccelerator(null);
             menuItemIC.addActionListener(ActionRouter.getInstance());
 

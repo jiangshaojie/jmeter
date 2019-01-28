@@ -131,11 +131,13 @@ In summary<code>true</code> means next iteration is associated to a new user.
     <li>Closing opened connection</li>
     <li>resetting SSL State</li>
 </ul>
+Defaults to: <code>true</code>
 </property>
 <property name="https.use.cached.ssl.context">
     Control if we allow reuse of cached SSL context between iterations.<br/>
     Set the value to <code>false</code> to reset the SSL context each iteration.<br/>
     Defaults to: <code>true</code>
+    <note>DEPRECATED, you should use <code>httpclient.reset_state_on_thread_group_iteration</code> with correct value</note>
 </property>
 <property name="https.keyStoreStartIndex">
     Start index to be used with keystores with many entries.<br/>
@@ -533,6 +535,14 @@ JMETER-SERVER</source>
     Bigger results will be clipped.<br/>
     Defaults to: <code>327678</code> (bytes)
 </property>
+<property name="httpclient4.deflate_relax_mode">
+    Ignore EOFException that some edgy application may emit to signal end of Deflated stream.<br/>
+    Defaults to: <code>false</code>
+</property>
+<property name="httpclient4.gzip_relax_mode">
+    Ignore EOFException that some edgy application may emit to signal end of GZipped stream.<br/>
+    Defaults to: <code>false</code>
+</property>
 </properties>
 </section>
 
@@ -786,7 +796,7 @@ JMETER-SERVER</source>
 <property name="proxy.binary.types">
     Binary <code>content-type</code> handling.<br/>
     These <code>content-types</code> will be handled by saving the request in a file.<br/>
-    Defaults to: <code>application/x-amf,application/x-java-serialized-object</code>
+    Defaults to: <code>application/x-amf,application/x-java-serialized-object,binary/octet-stream</code>
 </property>
 <property name="proxy.binary.directory">
     The files will be saved in this directory.<br/>
@@ -833,7 +843,7 @@ JMETER-SERVER</source>
 </property>
 <property name="proxy.cert.validity">
     The default validity (in days) for certificates created by JMeter.<br/>
-    Defaults to: <code>90</code>
+    Defaults to: <code>7</code>
 </property>
 <property name="proxy.cert.dynamic_keys">
     Use dynamic key generation (if supported by JMeter/JVM).<br/>
@@ -878,7 +888,7 @@ JMETER-SERVER</source>
     Define the HTML parser to be used.<br/>
     Do not comment this property.<br/>
     <dl>
-        <dt>org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser</dt>
+        <dt><code>org.apache.jmeter.protocol.http.parser.LagartoBasedHtmlParser</code></dt>
         <dd>This new parser (since 2.10) should perform better than all others. See <bugzilla>55632</bugzilla>.</dd>
         <dt><code>org.apache.jmeter.protocol.http.parser.JTidyHTMLParser</code></dt>
         <dd>Default parser before JMeter version 2.10</dd>
@@ -1007,7 +1017,7 @@ JMETER-SERVER</source>
 </property>
 <property name="jdbc.config.jdbc.driver.class">
     List of JDBC driver class name<br/>
-    Defaults to: <source>com.mysql.jdbc.Driver|org.postgresql.Driver|oracle.jdbc.OracleDriver|com.ingres.jdbc.IngresDriver|com.microsoft.sqlserver.jdbc.SQLServerDriver|com.microsoft.jdbc.sqlserver.SQLServerDriver|org.apache.derby.jdbc.ClientDriver|org.hsqldb.jdbc.JDBCDriver|com.ibm.db2.jcc.DB2Driver|org.apache.derby.jdbc.ClientDriver|org.h2.Driver|org.firebirdsql.jdbc.FBDrivery|org.mariadb.jdbc.Driver|org.sqlite.JDBC|net.sourceforge.jtds.jdbc.Driver</source>
+    Defaults to: <source>com.mysql.jdbc.Driver|org.postgresql.Driver|oracle.jdbc.OracleDriver|com.ingres.jdbc.IngresDriver|com.microsoft.sqlserver.jdbc.SQLServerDriver|com.microsoft.jdbc.sqlserver.SQLServerDriver|org.apache.derby.jdbc.ClientDriver|org.hsqldb.jdbc.JDBCDriver|com.ibm.db2.jcc.DB2Driver|org.apache.derby.jdbc.ClientDriver|org.h2.Driver|org.firebirdsql.jdbc.FBDriver|org.mariadb.jdbc.Driver|org.sqlite.JDBC|net.sourceforge.jtds.jdbc.Driver</source>
 </property>
 </properties>
 </section>
@@ -1379,7 +1389,7 @@ JMETER-SERVER</source>
 </property>
 <property name="javascript.use_rhino">
     Ability to switch to Rhino as default Javascript Engine used by <code>IfController</code>
-    and <code>__javaScript</code> function.<br/>
+    and <code><funclink name="__javaScript"/></code> function.<br/>
     <note>JMeter uses Nashorn since 3.2 version.
     If you want to use Rhino, set this value to <code>true</code></note>
     Defaults to: <code>false</code>
@@ -1494,10 +1504,6 @@ JMETER-SERVER</source>
     confirmation dialogue.<br/>
     Defaults to: <code>false</code>
 </property>
-<property name="jsr223.compiled_scripts_cache_size">
-    Used by JSR223 elements.<br/>
-    Size of compiled scripts cache.<br/>
-    Defaults to: <code>100</code></property>
 </properties>
 </section>
 <section name="&sect-num;.36 Classpath configuration" anchor="classpath">
@@ -1869,6 +1875,39 @@ JMETER-SERVER</source>
     By default we use Online documentation opened in Browser.
     Defaults to <code>false</code>
     </property>
+</properties>
+</section>
+
+<section name="&sect-num;.43 Advanced Groovy Scripting configuration" anchor="groovy">
+<description>Advanced properties for configuration of scripting in Groovy</description>
+<properties>
+    <property name="groovy.utilities">
+    Path to Groovy file containing utility functions to make available to <code><funclink name="__groovy"/></code> function.<br/>
+    Defaults to <code>bin/utility.groovy</code> 
+    </property>
+</properties>
+</section>
+
+<section name="&sect-num;.44 Advanced JSR-223 Scripting configuration" anchor="jsr223">
+<description>Advanced properties for configuration of scripting in JSR-223</description>
+<properties>
+    <property name="jsr223.init.file">
+    <p>Path to JSR-223 file containing script to call on JMeter startup.</p>
+    <p>The actual scripting engine to use will be determined by the extension
+    of the init file name. If the file name has no extension, or no scripting
+    engine could be found for that extension, Groovy will be used.</p>
+    <p>This script can use pre-defined variables:</p>
+    <ul>
+        <li><code>log</code>: Logger to log any message, uses SLF4J library</li>
+        <li><code>props</code>: JMeter Properties</li>
+        <li><code>OUT</code>: System.OUT, useful to write in the console</li>
+    </ul>
+    No script is defined by default.
+    </property>
+    <property name="jsr223.compiled_scripts_cache_size">
+    Used by JSR-223 elements.<br/>
+    Size of compiled scripts cache.<br/>
+    Defaults to: <code>100</code></property>
 </properties>
 </section>
 <!-- 

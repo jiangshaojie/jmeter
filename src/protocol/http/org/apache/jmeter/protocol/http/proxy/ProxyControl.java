@@ -81,6 +81,7 @@ import org.apache.jmeter.protocol.http.util.HTTPConstants;
 import org.apache.jmeter.samplers.SampleEvent;
 import org.apache.jmeter.samplers.SampleListener;
 import org.apache.jmeter.samplers.SampleResult;
+import org.apache.jmeter.testbeans.TestBeanHelper;
 import org.apache.jmeter.testelement.NonTestElement;
 import org.apache.jmeter.testelement.TestElement;
 import org.apache.jmeter.testelement.TestPlan;
@@ -171,6 +172,8 @@ public class ProxyControl extends GenericController implements NonTestElement {
 
     private static final String NOTIFY_CHILD_SAMPLER_LISTENERS_FILTERED = "ProxyControlGui.notify_child_sl_filtered"; // $NON-NLS-1$
 
+    private static final String BEARER_AUTH = "Bearer";
+
     private static final String BASIC_AUTH = "Basic"; // $NON-NLS-1$
 
     private static final String DIGEST_AUTH = "Digest"; // $NON-NLS-1$
@@ -230,7 +233,7 @@ public class ProxyControl extends GenericController implements NonTestElement {
     // The alias to be used if dynamic host names are not possible
     static final String JMETER_SERVER_ALIAS = ":jmeter:"; // $NON-NLS-1$
 
-    public static final int CERT_VALIDITY = JMeterUtils.getPropDefault("proxy.cert.validity", 90); // $NON-NLS-1$
+    public static final int CERT_VALIDITY = JMeterUtils.getPropDefault("proxy.cert.validity", 7); // $NON-NLS-1$
 
     // If this is defined, it is assumed to be the alias of a user-supplied certificate; overrides dynamic mode
     static final String CERT_ALIAS = JMeterUtils.getProperty("proxy.cert.alias"); // $NON-NLS-1$
@@ -698,11 +701,29 @@ public class ProxyControl extends GenericController implements NonTestElement {
                     if (tep.getName().equals(HTTPConstants.HEADER_AUTHORIZATION)) {
                         //Construct Authorization object from HEADER_AUTHORIZATION
                         authHeader = (Header) tep.getObjectValue();
-                        String[] authHeaderContent = authHeader.getValue().split(" ");//$NON-NLS-1$
+                        String headerValue = authHeader.getValue().trim();
+                        String[] authHeaderContent = headerValue.split(" ");//$NON-NLS-1$
                         String authType;
                         String authCredentialsBase64;
                         if(authHeaderContent.length>=2) {
                             authType = authHeaderContent[0];
+                            // if HEADER_AUTHORIZATION contains "Basic"
+                            // then set Mechanism.BASIC_DIGEST, otherwise Mechanism.KERBEROS
+                            Mechanism mechanism;
+                            switch (authType) {
+                                case BEARER_AUTH:
+                                    // This one will need to be correlated manually by user
+                                    return null;
+                                case DIGEST_AUTH:
+                                    mechanism = Mechanism.DIGEST;
+                                    break;
+                                case BASIC_AUTH:
+                                    mechanism = Mechanism.BASIC;
+                                    break;
+                                default:
+                                    mechanism = Mechanism.KERBEROS;
+                                    break;
+                            } 
                             authCredentialsBase64 = authHeaderContent[1];
                             authorization=new Authorization();
                             try {
@@ -711,20 +732,6 @@ public class ProxyControl extends GenericController implements NonTestElement {
                                 log.error("Error filling url on authorization, message: {}", e.getMessage(), e);
                                 authorization.setURL("${AUTH_BASE_URL}");//$NON-NLS-1$
                             }
-                            // if HEADER_AUTHORIZATION contains "Basic"
-                            // then set Mechanism.BASIC_DIGEST, otherwise Mechanism.KERBEROS
-                            Mechanism mechanism;
-                            switch (authType) {
-                            case DIGEST_AUTH:
-                                mechanism = Mechanism.DIGEST;
-                                break;
-                            case BASIC_AUTH:
-                                mechanism = Mechanism.BASIC;
-                                break;
-                            default:
-                                mechanism = Mechanism.KERBEROS;
-                                break;
-                            } 
                             authorization.setMechanism(mechanism);
                             if(BASIC_AUTH.equals(authType)) {
                                 String authCred= new String(Base64.decodeBase64(authCredentialsBase64));
@@ -1431,6 +1438,7 @@ public class ProxyControl extends GenericController implements NonTestElement {
                 if (subNode.isEnabled()) {
                     TestElement testElement = subNode.getTestElement();
                     if (testElement instanceof TestStateListener) {
+                        TestBeanHelper.prepare(testElement);
                         ((TestStateListener) testElement).testStarted();
                     }
                 }
